@@ -53,11 +53,3 @@ cd Chess-game-engine
 | _Name_ | pathakdiksha268-beep |
 | _Name_ | ridhisihag22 |
 
-## Roadmap
-
-- [ ] Board and piece movement
-- [ ] Full rule validation
-- [ ] GUI
-- [ ] AI opponent
-- [ ] Analyzer
-- [ ] Tests
