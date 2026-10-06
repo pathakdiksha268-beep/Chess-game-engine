@@ -72,13 +72,13 @@ The project will support:
 
 ### Phase 6 — AI
 
-* [x] Create `Evaluator` class
-* [x] Implement material-based evaluation
-* [x] Implement piece-square tables
-* [x] Implement position evaluation
-* [x] Implement Minimax search
-* [x] Add Alpha-Beta pruning
-* [x] Add configurable search depth
+* [ ] Create `Evaluator` class
+* [ ] Implement material-based evaluation
+* [ ] Implement piece-square tables
+* [ ] Implement position evaluation
+* [ ] Implement Minimax search
+* [ ] Add Alpha-Beta pruning
+* [ ] Add configurable search depth
 * [ ] Improve AI playing strength
 * [ ] Experiment with additional evaluation heuristics
 
