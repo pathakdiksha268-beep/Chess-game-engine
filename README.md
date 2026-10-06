@@ -1,55 +1,78 @@
-# Chess-game-engine
-# Chess Game Engine
+# Chess Engine with Minimax AI
 
-An object-oriented chess engine in C++ with a GUI and a built-in move analyzer.
+A complete console-based chess game in C++ with an AI opponent powered by minimax search.
 
 ## Problem Statement
 
-Chess has many piece types, special moves, and end conditions, and beginner implementations often mix game logic with the UI and give players no insight into why a move is good or bad. This project builds a complete chess system that:
+Chess has many piece types, each with its own movement rules, plus special moves and end conditions. Implementing it is a strong exercise in object-oriented design: every piece behaves differently, yet the board must treat them all the same way. This project builds a console chess game that:
 
-- models the board, pieces, and moves using clean OOP (inheritance, polymorphism, abstraction, encapsulation)
-- enforces the full rules: check, checkmate, stalemate, castling, en passant, promotion
-- provides a GUI for interactive play, kept separate from the engine
-- includes an analyzer that evaluates positions and suggests the best move
+- models pieces with a deep inheritance hierarchy and virtual functions
+- generates and validates moves through a polymorphic `getValidMoves()`
+- plays against the user using minimax search with alpha-beta pruning
+- scores positions using a matrix-based evaluation (material plus piece-square tables)
 
 ## Features
 
-- Legal move generation, move history, and undo
-- Clickable board with highlighted legal moves and game status messages
-- AI opponent using minimax with alpha-beta pruning
-- Analyzer: evaluation bar, best move suggestion, optional game review and PGN support
+- Console board display with algebraic input (e.g. `e2 e4`)
+- Legal move validation, check, checkmate, and stalemate detection
+- Castling, en passant, and pawn promotion
+- Human vs Human and Human vs AI modes
+- AI with adjustable search depth
+- Move history and undo
 
 ## OOP Design
 
-- **Abstraction / inheritance / polymorphism:** abstract `Piece` with `Pawn`, `Knight`, `Bishop`, `Rook`, `Queen`, `King`
-- **Strategy pattern:** `Analyzer` interface with swappable implementations
-- **MVC:** engine (model), GUI (view), click handling (controller)
-
-## Structure
+**Inheritance hierarchy**
 
 ```
-src/engine/    pieces, board, moves, rules
-src/analyzer/  analyzer interface and implementations
-src/gui/       view and controller
-tests/
-docs/
+Piece (abstract)
+ |-- Pawn
+ |-- Knight
+ |-- King
+ |-- SlidingPiece (abstract)
+      |-- Rook
+      |-- Bishop
+      |-- Queen
 ```
 
-## Tech Stack
+- `Piece` declares `virtual std::vector<Move> getValidMoves(const Board&) const = 0;`
+- Each derived class overrides it with its own movement rules.
+- `SlidingPiece` holds the shared direction-scanning logic for Rook, Bishop, and Queen.
+- `Board` stores pieces as `Piece*` and works through the base class (polymorphism).
 
-C++17 | GUI: _TBD_ | Build: _TBD_ | Git and GitHub
+**Other classes:** `Board`, `Move`, `Game`, `Player` (human or AI), `Evaluator`, `MinimaxAI`.
 
-## Getting Started
+## AI and Evaluation
+
+- **Search:** minimax with alpha-beta pruning, configurable depth.
+- **Evaluation matrix:** score = material value + piece-square table value. Each piece type has an 8x8 matrix rewarding good squares (e.g. central knights, advanced pawns), mirrored for the other colour.
+
+## Project Structure
+
+```
+src/engine/   Piece classes, Board, Move, Game rules
+src/ai/       Evaluator and MinimaxAI
+src/main.cpp  Console game loop
+tests/        Move generation and rule tests
+docs/         Class diagram and report
+```
+
+## Build and Run
 
 ```bash
-git clone https://github.com/pathakdiksha268-beep/Chess-game-engine.git
-cd Chess-game-engine
+g++ -std=c++17 -o chess $(find src -name '*.cpp')
+./chess
 ```
 
 ## Team
 
-| Name | GitHub |
-|---|---|
-| _Name_ | pathakdiksha268-beep |
-| _Name_ | ridhisihag22 |
+| Name | GitHub | Area |
+|---|---|---|
+| _Name_ | pathakdiksha268-beep | _e.g. pieces and board_ |
+| _Name_ | ridhisihag22 | _e.g. AI and evaluation_ |
 
+## Git Workflow
+
+- `main` always contains working code; never push directly to it.
+- One branch per task (e.g. `feature/knight-moves`), merged through a pull request.
+- Small commits with clear messages; run `git pull` before starting new work.
