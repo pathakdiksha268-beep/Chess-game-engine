@@ -27,11 +27,11 @@ The project will support:
 * [x] Set up C++17 project structure
 * [x] Create `src/`, `tests/`, and `docs/` directories
 * [x] Establish Git branching and pull-request workflow
-* [ ] Define basic class structure
+* [x] Define basic class structure
 
 ### Phase 2 — Chess Board and Piece System
 
-* [ ] Create abstract `Piece` base class
+* [x] Create abstract `Piece` base class
 * [ ] Implement `Pawn`
 * [ ] Implement `Knight`
 * [ ] Implement `Bishop`
