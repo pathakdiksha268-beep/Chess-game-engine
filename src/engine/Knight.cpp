@@ -4,7 +4,7 @@ using namespace std;
 
 vector<Move> Knight::getValidMoves(const Board& board,Position from) const{
     vector<Move>moves;
-    //Implementation of knight moves on row and column
+    //Implementation of knight moves on row and column 
     const int dirRow[] = {-2,-2,-1,-1,1,1,2,2}; 
     const int dirCol[] = {-1,1,-2,2,-2,2,-1,1};
     for(int i=0;i<8;++i){
