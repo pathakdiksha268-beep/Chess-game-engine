@@ -16,4 +16,5 @@ vector<Move>King::getValidMoves(const Board& board,Position from) const{
             moves.push_back(Move{from,{r,c}});
         }
     }
+    return moves;
 }
