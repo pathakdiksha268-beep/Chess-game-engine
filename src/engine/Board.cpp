@@ -1,6 +1,4 @@
 #include "engine/Board.h"
-
-
 Board::Board() {}
 
 const Piece* Board::getPiece(Position pos) const {
@@ -12,4 +10,4 @@ const Piece* Board::getPiece(Position pos) const {
 
 bool Board::isEmpty(Position pos) const {
     return getPiece(pos) == nullptr;
-}
+}   
