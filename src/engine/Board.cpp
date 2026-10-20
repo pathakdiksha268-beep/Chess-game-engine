@@ -94,3 +94,48 @@ void Board::undoMove() {
 
     history_.pop_back();
 }
+bool Board::isInCheck(Color color) const {
+    // 1. Find this colour's king
+    Position kingPos{-1, -1};
+    for (int r = 0; r < 8; ++r) {
+        for (int c = 0; c < 8; ++c) {
+            const Piece* p = grid_[r][c].get();
+            if (p != nullptr && p->color() == color && p->type() == PieceType::King) {
+                kingPos = {r, c};
+            }
+        }
+    }
+    if (kingPos.row == -1) return false;   // no king on the board
+
+    // 2. Does any enemy piece have a move that lands on the king's square?
+    for (int r = 0; r < 8; ++r) {
+        for (int c = 0; c < 8; ++c) {
+            const Piece* p = grid_[r][c].get();
+            if (p == nullptr || p->color() == color) continue;
+
+            for (const Move& m : p->getValidMoves(*this, {r, c})) {
+                if (m.to == kingPos) return true;
+            }
+        }
+    }
+    return false;
+}
+
+std::vector<Move> Board::getLegalMoves(Color color) {
+    std::vector<Move> legal;
+    for (int r = 0; r < 8; ++r) {
+        for (int c = 0; c < 8; ++c) {
+            const Piece* p = grid_[r][c].get();
+            if (p == nullptr || p->color() != color) continue;
+
+            // Moves that follow the piece's rules (may leave the king in check)
+            for (const Move& m : p->getValidMoves(*this, {r, c})) {
+                makeMove(m);                          // try the move
+                bool stillInCheck = isInCheck(color); // is our king attacked now?
+                undoMove();                           // take it back
+                if (!stillInCheck) legal.push_back(m);
+            }
+        }
+    }
+    return legal;
+}
