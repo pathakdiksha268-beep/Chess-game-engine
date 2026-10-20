@@ -139,3 +139,25 @@ std::vector<Move> Board::getLegalMoves(Color color) {
     }
     return legal;
 }
+bool Board::isCheckmate(Color color) {
+    return isInCheck(color) && getLegalMoves(color).empty();
+}
+
+bool Board::isStalemate(Color color) {
+    return !isInCheck(color) && getLegalMoves(color).empty();
+}
+
+void Board::clear() {
+    for (auto& rowOfSquares : grid_) {
+        for (auto& square : rowOfSquares) {
+            square.reset();
+        }
+    }
+    history_.clear();
+}
+
+void Board::setPiece(Position pos, std::unique_ptr<Piece> piece) {
+    if (isInside(pos.row, pos.col)) {
+        grid_[pos.row][pos.col] = std::move(piece);
+    }
+} 
