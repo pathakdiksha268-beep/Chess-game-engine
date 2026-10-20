@@ -24,6 +24,12 @@ public:
     // Declared but not written yet (next tasks)
     bool isInCheck(Color color) const;
     std::vector<Move> getLegalMoves(Color color);
+        bool isCheckmate(Color color);
+    bool isStalemate(Color color);
+
+    // Helpers for building test positions
+    void clear();
+    void setPiece(Position pos, std::unique_ptr<Piece> piece);
 
 private:
     std::array<std::array<std::unique_ptr<Piece>, 8>, 8> grid_;
