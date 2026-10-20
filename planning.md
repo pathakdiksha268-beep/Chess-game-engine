@@ -1,4 +1,4 @@
-# Chess Game Engine — Project Planning
+# Chess Game Engine - Project Planning
 
 ## 1. Project Goal
 
@@ -21,7 +21,7 @@ The project will support:
 
 ## 2. Development Phases
 
-### Phase 1 — Project Setup
+### Phase 1 - Project Setup
 
 * [x] Create GitHub repository
 * [x] Set up C++17 project structure
@@ -32,15 +32,15 @@ The project will support:
 ### Phase 2 — Chess Board and Piece System
 
 * [x] Create abstract `Piece` base class
-* [ ] Implement `Pawn`
-* [ ] Implement `Knight`
-* [ ] Implement `Bishop`
-* [ ] Implement `Rook`
-* [ ] Implement `Queen`
-* [ ] Implement `King`
-* [ ] Create `SlidingPiece` abstraction for Bishop, Rook, and Queen
-* [ ] Implement `Board`
-* [ ] Implement `Move`
+* [x] Implement `Pawn`
+* [x] Implement `Knight`
+* [x] Implement `Bishop`
+* [x] Implement `Rook`
+* [x] Implement `Queen`
+* [x] Implement `King`
+* [x] Create `SlidingPiece` abstraction for Bishop, Rook, and Queen
+* [x] Implement `Board`
+* [x] Implement `Move`
 
 ### Phase 3 — Move Generation and Validation
 
@@ -72,7 +72,7 @@ The project will support:
 
 ### Phase 6 — AI
 
-* [ ] Create `Evaluator` class
+* [x] Create `Evaluator` class
 * [ ] Implement material-based evaluation
 * [ ] Implement piece-square tables
 * [ ] Implement position evaluation
