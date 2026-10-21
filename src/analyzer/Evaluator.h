@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/board.h"
+#include "engine/Board.h"
 
 class Evaluator{
     public:
