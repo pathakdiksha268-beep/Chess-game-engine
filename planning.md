@@ -44,14 +44,14 @@ The project will support:
 
 ### Phase 3 — Move Generation and Validation
 
-* [ ] Implement movement rules for all pieces
-* [ ] Generate valid moves
-* [ ] Validate moves against board state
-* [ ] Implement capture logic
-* [ ] Prevent moves that leave the player's king in check
-* [ ] Implement check detection
-* [ ] Implement checkmate detection
-* [ ] Implement stalemate detection
+* [x] Implement movement rules for all pieces
+* [x] Generate valid moves
+* [x] Validate moves against board state
+* [x] Implement capture logic
+* [x] Prevent moves that leave the player's king in check
+* [x] Implement check detection
+* [x] Implement checkmate detection
+* [x] Implement stalemate detection
 
 ### Phase 4 — Special Chess Rules
 
