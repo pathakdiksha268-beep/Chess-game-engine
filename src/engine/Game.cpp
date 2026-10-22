@@ -2,17 +2,47 @@
 #include <iostream>
 #include <cctype>
 
+namespace {
+
+// Name of a square such as "e2" (row 0 is rank 8)
+std::string squareName(const Position& p) {
+    return std::string(1, static_cast<char>('a' + p.col)) + std::to_string(8 - p.row);
+}
+
+// Removes all spaces and makes the text lowercase: "E2 e4" -> "e2e4"
+std::string compact(const std::string& text) {
+    std::string s;
+    for (char c : text) {
+        if (!std::isspace(static_cast<unsigned char>(c)))
+            s += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return s;
+}
+
+}  // namespace
+
 void Game::switchTurn() {
     turn_ = (turn_ == Color::White) ? Color::Black : Color::White;
 }
 
-bool Game::parseMove(const std::string& input, Move& out) const {
-    // Remove spaces and make lowercase: "E2 e4" -> "e2e4"
-    std::string s;
-    for (char c : input) {
-        if (!std::isspace(static_cast<unsigned char>(c)))
-            s += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+bool Game::chooseMode() {
+    std::cout << "=== Chess ===\n"
+              << "1) Human vs Human\n"
+              << "2) Human vs AI (you play White)\n";
+    while (true) {
+        std::cout << "Choose 1 or 2: ";
+        std::string line;
+        if (!std::getline(std::cin, line)) return false;   // input closed
+
+        std::string choice = compact(line);
+        if (choice == "1") { vsAI_ = false; return true; }
+        if (choice == "2") { vsAI_ = true;  return true; }
+        std::cout << "Please type 1 or 2.\n";
     }
+}
+
+bool Game::parseMove(const std::string& input, Move& out) const {
+    std::string s = compact(input);
 
     if (s.size() != 4 && s.size() != 5) return false;
 
@@ -41,6 +71,8 @@ bool Game::parseMove(const std::string& input, Move& out) const {
 }
 
 void Game::run() {
+    if (!chooseMode()) return;
+
     board_.setupStartingPosition();
     std::cout << "Type moves like 'e2 e4'. Commands: undo, quit\n";
 
@@ -61,26 +93,38 @@ void Game::run() {
             std::cout << "Check!\n";
         }
 
+        // The AI's turn: no input needed. Checkmate and stalemate were checked
+        // above, so the AI always has at least one legal move here.
+        if (vsAI_ && turn_ == aiColor_) {
+            std::cout << "AI is thinking...\n";
+            Move aiMove = ai_.findBestMove(board_, turn_);
+            std::cout << "AI plays " << squareName(aiMove.from) << " "
+                      << squareName(aiMove.to) << "\n";
+            board_.makeMove(aiMove);
+            moveCount_++;
+            switchTurn();
+            continue;
+        }
+
         std::cout << "> ";
         std::string line;
         if (!std::getline(std::cin, line)) break;   // input closed
 
-        // Make a trimmed, lowercase copy to check for commands
-        std::string cmd;
-        for (char c : line) {
-            if (!std::isspace(static_cast<unsigned char>(c)))
-                cmd += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        }
+        std::string cmd = compact(line);
 
         if (cmd == "quit") break;
 
         if (cmd == "undo") {
-            if (moveCount_ == 0) {
+            // Against the AI, one undo takes back the AI's move and your own
+            int steps = vsAI_ ? 2 : 1;
+            if (moveCount_ < steps) {
                 std::cout << "Nothing to undo.\n";
             } else {
-                board_.undoMove();
-                moveCount_--;
-                switchTurn();
+                for (int i = 0; i < steps; i++) {
+                    board_.undoMove();
+                    moveCount_--;
+                    switchTurn();
+                }
             }
             continue;
         }
