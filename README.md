@@ -15,7 +15,7 @@ Chess has many piece types, each with its own movement rules, plus special moves
 
 - Console board display with algebraic input (e.g. `e2 e4`)
 - Legal move validation, check, checkmate, and stalemate detection
-- Castling, en passant, and pawn promotion
+- Castling (see tests), en passant and pawn promotion (in progress)
 - Human vs Human and Human vs AI modes
 - AI with adjustable search depth
 - Move history and undo
@@ -40,7 +40,8 @@ Piece (abstract)
 - `SlidingPiece` holds the shared direction-scanning logic for Rook, Bishop, and Queen.
 - `Board` stores pieces as `Piece*` and works through the base class (polymorphism).
 
-**Other classes:** `Board`, `Move`, `Game`, `Player` (human or AI), `Evaluator`, `MinimaxAI`.
+
+**Other classes:** `Board`, `Move`, `Position`, `Game` (holds a `vsAI_` flag for Human vs AI), `Evaluator`, `MinimaxAI`.
 
 ## AI and Evaluation
 
@@ -50,11 +51,11 @@ Piece (abstract)
 ## Project Structure
 
 ```
-src/engine/   Piece classes, Board, Move, Game rules
-src/ai/       Evaluator and MinimaxAI
-src/main.cpp  Console game loop
+src/engine/   Piece classes, Board, Move, Game (game loop)
+src/analyzer/ Evaluator and MinimaxAI
+src/main.cpp  Starts the game
 tests/        Move generation and rule tests
-docs/         Class diagram and report
+docs/       Class diagrams and report
 ```
 
 ## Build and Run
@@ -64,13 +65,20 @@ g++ -std=c++17 -o chess $(find src -name '*.cpp')
 ./chess
 ```
 
+## How to Play
+
+Choose a mode at the start: 1) Human vs Human, 2) Human vs AI (you play White).
+Enter moves as the starting and ending square, e.g. `e2 e4`.
+Commands: `undo` (takes back two moves in AI mode) and `quit`.
+The program prints "Check!", "Checkmate!" or "Stalemate" when they happen.
+
+
 ## Team
 
 | Name | GitHub | Area |
 |---|---|---|
 | _Name_ | pathakdiksha268-beep | _e.g. pieces and board_ |
-| _Name_ | ridhisihag22 | _e.g. AI and evaluation_ |
-
+| Ridhi Sihag | ridhisihag22 | Game loop, input handling, Human vs AI mode, class diagrams |
 ## Git Workflow
 
 - `main` always contains working code; never push directly to it.
