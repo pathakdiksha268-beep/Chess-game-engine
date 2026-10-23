@@ -19,6 +19,7 @@ Chess has many piece types, each with its own movement rules, plus special moves
 - Human vs Human and Human vs AI modes
 - AI with adjustable search depth
 - Move history and undo
+- Graphical interface (SFML) built on top of the existing engine (planned extension)
 
 ## OOP Design
 
@@ -53,6 +54,7 @@ Piece (abstract)
 ```
 src/engine/   Piece classes, Board, Move, Game (game loop)
 src/analyzer/ Evaluator and MinimaxAI
+src/gui/      Graphical interface (SFML, planned)
 src/main.cpp  Starts the game
 tests/        Move generation and rule tests
 docs/       Class diagrams and report
@@ -61,7 +63,7 @@ docs/       Class diagrams and report
 ## Build and Run
 
 ```bash
-g++ -std=c++17 -o chess $(find src -name '*.cpp')
+g++ -std=c++17 -Isrc -o chess src/main.cpp src/engine/*.cpp src/analyzer/*.cpp
 ./chess
 ```
 
@@ -77,8 +79,9 @@ The program prints "Check!", "Checkmate!" or "Stalemate" when they happen.
 
 | Name | GitHub | Area |
 |---|---|---|
-| _Name_ | pathakdiksha268-beep | _e.g. pieces and board_ |
+| Diksha Pathak | pathakdiksha268-beep | Piece hierarchy, move generation, undo, check/checkmate/stalemate, evaluation matrices, minimax AI with alpha-beta pruning, pawn promotion, SFML GUI (planned) |
 | Ridhi Sihag | ridhisihag22 | Game loop, input handling, Human vs AI mode, class diagrams |
+
 ## Git Workflow
 
 - `main` always contains working code; never push directly to it.
