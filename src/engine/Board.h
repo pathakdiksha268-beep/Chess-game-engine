@@ -39,6 +39,10 @@ private:
         std::unique_ptr<Piece> captured;      // piece that was taken, if any
         std::unique_ptr<Piece> promotedPawn;  // the pawn that was replaced, if promotion
         bool movedBefore = false;
+        bool castled = false;          //was this a castling move?
+        Position rookFrom{0, 0};       //where the rook started
+        Position rookTo{0, 0};         // where the rook went
     };
     std::vector<MoveRecord> history_;
+    void addCastlingMoves(Color color, std::vector<Move>& out);
 };
