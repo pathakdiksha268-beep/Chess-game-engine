@@ -7,6 +7,7 @@
 #include "engine/Bishop.h"
 #include "engine/Queen.h"
 #include "engine/King.h"
+#include <cstdlib>
 namespace {
 std::unique_ptr<Piece> createPiece(PieceType type, Color color) {
     switch (type) {
@@ -100,6 +101,13 @@ void Board::makeMove(const Move& move) {
             std::move(grid_[rec.rookFrom.row][rec.rookFrom.col]);
         grid_[rec.rookTo.row][rec.rookTo.col]->setMoved(true);
     }
+    else if (move.type == MoveType::EnPassant) {
+        rec.enPassant = true;
+        rec.capturedPos = {move.from.row, move.to.col};                    // pawn beside us
+        rec.captured = std::move(grid_[rec.capturedPos.row][rec.capturedPos.col]);
+        grid_[move.to.row][move.to.col] = std::move(grid_[move.from.row][move.from.col]);
+        piece->setMoved(true);
+    }
     else {
         grid_[move.to.row][move.to.col] = std::move(grid_[move.from.row][move.from.col]);
         piece->setMoved(true);
@@ -111,7 +119,15 @@ void Board::makeMove(const Move& move) {
 void Board::undoMove() {
     if (history_.empty()) return;
     MoveRecord& rec = history_.back();
-        if (rec.castled) {
+        if (rec.enPassant) {
+        grid_[rec.move.from.row][rec.move.from.col] =
+            std::move(grid_[rec.move.to.row][rec.move.to.col]);
+        grid_[rec.move.from.row][rec.move.from.col]->setMoved(rec.movedBefore);
+        grid_[rec.capturedPos.row][rec.capturedPos.col] = std::move(rec.captured);
+        history_.pop_back();
+        return;     // done: the normal undo code below would put the pawn on the wrong square
+    }
+    if (rec.castled) {
         grid_[rec.rookFrom.row][rec.rookFrom.col] =
             std::move(grid_[rec.rookTo.row][rec.rookTo.col]);
         grid_[rec.rookFrom.row][rec.rookFrom.col]->setMoved(false);
@@ -120,7 +136,9 @@ void Board::undoMove() {
     if (rec.move.type == MoveType::Promotion) {
         grid_[rec.move.from.row][rec.move.from.col] = std::move(rec.promotedPawn);
         grid_[rec.move.to.row][rec.move.to.col].reset();    // remove the promoted piece
-    } else {
+    } 
+
+    else {
         grid_[rec.move.from.row][rec.move.from.col] =
             std::move(grid_[rec.move.to.row][rec.move.to.col]);
     }
@@ -158,7 +176,7 @@ bool Board::isInCheck(Color color) const {
 }
 
 std::vector<Move> Board::getLegalMoves(Color color) {
-    // 1. Moves that follow each piece's own rules, plus castling
+    // 1. Moves that follow each piece's own rules, plus castling and en passant
     std::vector<Move> candidates;
     for (int r = 0; r < 8; ++r) {
         for (int c = 0; c < 8; ++c) {
@@ -170,6 +188,7 @@ std::vector<Move> Board::getLegalMoves(Color color) {
         }
     }
     addCastlingMoves(color, candidates);
+    addEnPassantMoves(color, candidates);
 
     // 2. Keep only the moves that don't leave our own king in check
     std::vector<Move> legal;
@@ -235,5 +254,26 @@ void Board::addCastlingMoves(Color color, std::vector<Move>& out) {
     if (unmovedRook(0) && isEmpty({row, 1}) && isEmpty({row, 2}) &&
         isEmpty({row, 3}) && kingCanPassThrough(3)) {
         out.push_back(Move{{row, 4}, {row, 2}, MoveType::Castle});
+    }
+}
+void Board::addEnPassantMoves(Color color, std::vector<Move>& out) {
+    if (history_.empty()) return;
+    const Move& last = history_.back().move;
+
+    // The last move must be a pawn moving two squares straight forward
+    if (std::abs(last.to.row - last.from.row) != 2 || last.to.col != last.from.col) return;
+    const Piece* moved = getPiece(last.to);
+    if (moved == nullptr || moved->type() != PieceType::Pawn || moved->color() == color) return;
+
+    int targetRow = (last.from.row + last.to.row) / 2;   // the square the pawn skipped
+
+    // One of our pawns standing next to it can capture it
+    for (int dc = -1; dc <= 1; dc += 2) {
+        int col = last.to.col + dc;
+        if (!isInside(last.to.row, col)) continue;
+        const Piece* mine = getPiece({last.to.row, col});
+        if (mine != nullptr && mine->type() == PieceType::Pawn && mine->color() == color) {
+            out.push_back(Move{{last.to.row, col}, {targetRow, last.to.col}, MoveType::EnPassant});
+        }
     }
 }
