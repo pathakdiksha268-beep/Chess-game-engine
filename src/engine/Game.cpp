@@ -19,6 +19,17 @@ std::string compact(const std::string& text) {
     return s;
 }
 
+// Name of the piece a pawn can promote to
+const char* pieceName(PieceType t) {
+    switch (t) {
+        case PieceType::Queen:  return "Queen";
+        case PieceType::Rook:   return "Rook";
+        case PieceType::Bishop: return "Bishop";
+        case PieceType::Knight: return "Knight";
+        default:                return "piece";
+    }
+}
+
 }  // namespace
 
 void Game::switchTurn() {
@@ -75,6 +86,7 @@ void Game::run() {
 
     board_.setupStartingPosition();
     std::cout << "Type moves like 'e2 e4'. Commands: undo, quit\n";
+    std::cout << "To promote a pawn, add a letter: 'a7 a8 n' (q, r, b or n; default q)\n";
 
     while (true) {
         board_.print();
@@ -101,6 +113,9 @@ void Game::run() {
             std::cout << "AI plays " << squareName(aiMove.from) << " "
                       << squareName(aiMove.to) << "\n";
             board_.makeMove(aiMove);
+            if (aiMove.type == MoveType::Promotion) {
+                std::cout << "AI promoted to " << pieceName(aiMove.promotion) << ".\n";
+            }
             moveCount_++;
             switchTurn();
             continue;
@@ -155,6 +170,9 @@ void Game::run() {
         }
 
         board_.makeMove(chosen);
+        if (chosen.type == MoveType::Promotion) {
+            std::cout << "Pawn promoted to " << pieceName(chosen.promotion) << ".\n";
+        }
         moveCount_++;
         switchTurn();
     }
