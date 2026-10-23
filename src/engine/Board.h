@@ -42,7 +42,10 @@ private:
         bool castled = false;          //was this a castling move?
         Position rookFrom{0, 0};       //where the rook started
         Position rookTo{0, 0};         // where the rook went
+        bool enPassant = false; 
+        Position capturedPos{0, 0}; // where the captured pawn stood
     };
     std::vector<MoveRecord> history_;
     void addCastlingMoves(Color color, std::vector<Move>& out);
+    void addEnPassantMoves(Color color, std::vector<Move>& out);
 };
