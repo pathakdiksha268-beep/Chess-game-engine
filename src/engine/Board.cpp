@@ -86,7 +86,21 @@ void Board::makeMove(const Move& move) {
         rec.promotedPawn = std::move(grid_[move.from.row][move.from.col]);   // keep the pawn for undo
         grid_[move.to.row][move.to.col] = createPiece(move.promotion, color);
         grid_[move.to.row][move.to.col]->setMoved(true);
-    } else {
+    } 
+    else if (move.type == MoveType::Castle) {
+        bool kingside = move.to.col > move.from.col;
+        rec.castled = true;
+        rec.rookFrom = {move.from.row, kingside ? 7 : 0};
+        rec.rookTo   = {move.from.row, kingside ? 5 : 3};
+
+        grid_[move.to.row][move.to.col] = std::move(grid_[move.from.row][move.from.col]);
+        piece->setMoved(true);
+
+        grid_[rec.rookTo.row][rec.rookTo.col] =
+            std::move(grid_[rec.rookFrom.row][rec.rookFrom.col]);
+        grid_[rec.rookTo.row][rec.rookTo.col]->setMoved(true);
+    }
+    else {
         grid_[move.to.row][move.to.col] = std::move(grid_[move.from.row][move.from.col]);
         piece->setMoved(true);
     }
@@ -97,6 +111,11 @@ void Board::makeMove(const Move& move) {
 void Board::undoMove() {
     if (history_.empty()) return;
     MoveRecord& rec = history_.back();
+        if (rec.castled) {
+        grid_[rec.rookFrom.row][rec.rookFrom.col] =
+            std::move(grid_[rec.rookTo.row][rec.rookTo.col]);
+        grid_[rec.rookFrom.row][rec.rookFrom.col]->setMoved(false);
+    }
 
     if (rec.move.type == MoveType::Promotion) {
         grid_[rec.move.from.row][rec.move.from.col] = std::move(rec.promotedPawn);
@@ -139,20 +158,26 @@ bool Board::isInCheck(Color color) const {
 }
 
 std::vector<Move> Board::getLegalMoves(Color color) {
-    std::vector<Move> legal;
+    // 1. Moves that follow each piece's own rules, plus castling
+    std::vector<Move> candidates;
     for (int r = 0; r < 8; ++r) {
         for (int c = 0; c < 8; ++c) {
             const Piece* p = grid_[r][c].get();
             if (p == nullptr || p->color() != color) continue;
-
-            // Moves that follow the piece's rules (may leave the king in check)
             for (const Move& m : p->getValidMoves(*this, {r, c})) {
-                makeMove(m);                          // try the move
-                bool stillInCheck = isInCheck(color); // is our king attacked now?
-                undoMove();                           // take it back
-                if (!stillInCheck) legal.push_back(m);
+                candidates.push_back(m);
             }
         }
+    }
+    addCastlingMoves(color, candidates);
+
+    // 2. Keep only the moves that don't leave our own king in check
+    std::vector<Move> legal;
+    for (const Move& m : candidates) {
+        makeMove(m);
+        bool stillInCheck = isInCheck(color);
+        undoMove();
+        if (!stillInCheck) legal.push_back(m);
     }
     return legal;
 }
@@ -178,3 +203,37 @@ void Board::setPiece(Position pos, std::unique_ptr<Piece> piece) {
         grid_[pos.row][pos.col] = std::move(piece);
     }
 } 
+
+void Board::addCastlingMoves(Color color, std::vector<Move>& out) {
+    int row = (color == Color::White) ? 7 : 0;
+
+    const Piece* king = getPiece({row, 4});
+    if (king == nullptr || king->type() != PieceType::King ||
+        king->color() != color || king->hasMoved()) return;
+    if (isInCheck(color)) return;
+
+    // True if the king can step one square to this column without being in check
+    auto kingCanPassThrough = [&](int col) {
+        makeMove(Move{{row, 4}, {row, col}});
+        bool attacked = isInCheck(color);
+        undoMove();
+        return !attacked;
+    };
+
+    auto unmovedRook = [&](int col) {
+        const Piece* r = getPiece({row, col});
+        return r != nullptr && r->type() == PieceType::Rook &&
+               r->color() == color && !r->hasMoved();
+    };
+
+    // Kingside: king e to g, rook h to f
+    if (unmovedRook(7) && isEmpty({row, 5}) && isEmpty({row, 6}) &&
+        kingCanPassThrough(5)) {
+        out.push_back(Move{{row, 4}, {row, 6}, MoveType::Castle});
+    }
+    // Queenside: king e to c, rook a to d (b must be empty, but may be attacked)
+    if (unmovedRook(0) && isEmpty({row, 1}) && isEmpty({row, 2}) &&
+        isEmpty({row, 3}) && kingCanPassThrough(3)) {
+        out.push_back(Move{{row, 4}, {row, 2}, MoveType::Castle});
+    }
+}
