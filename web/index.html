@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chess Engine · C++ minimax AI in your browser</title>
+  <meta name="description" content="A chess engine written in C++ with a minimax AI, compiled to WebAssembly.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="classic">
+<div id="app">
+
+  <!-- ============ Screen 1: choose a mode ============ -->
+  <section id="screen-home" class="screen active" aria-labelledby="home-title">
+    <div class="hero">
+      <div class="logo" aria-hidden="true">&#9822;</div>
+      <h1 id="home-title">Chess Engine</h1>
+      <p class="tagline">A chess engine written in C++ with a minimax AI,
+        running right here in your browser.</p>
+    </div>
+
+    <div class="mode-cards">
+      <button class="mode-card" data-mode="ai" disabled>
+        <span class="mode-icon" aria-hidden="true">&#9818;</span>
+        <span class="mode-title">Play the Computer</span>
+        <span class="mode-desc">Face the minimax engine. Choose your colour and how hard it thinks.</span>
+        <span class="mode-go">Choose &rarr;</span>
+      </button>
+      <button class="mode-card" data-mode="local" disabled>
+        <span class="mode-icon" aria-hidden="true">&#9823;&#9817;</span>
+        <span class="mode-title">Two Players</span>
+        <span class="mode-desc">Pass and play on one screen. Every rule is enforced for both sides.</span>
+        <span class="mode-go">Choose &rarr;</span>
+      </button>
+    </div>
+
+    <p id="engine-note" class="note" role="status">Loading engine&hellip;</p>
+
+    <ul class="chips" aria-label="Features">
+      <li>C++17 engine</li>
+      <li>Minimax + alpha-beta pruning</li>
+      <li>Piece-square evaluation</li>
+      <li>Castling, en passant, promotion</li>
+      <li>WebAssembly</li>
+    </ul>
+  </section>
+
+  <!-- ============ Screen 2: choose the layout ============ -->
+  <section id="screen-setup" class="screen" aria-labelledby="setup-title">
+    <header class="topbar">
+      <button class="link-btn" id="btn-back-home">&larr; Back</button>
+      <div>
+        <h2 id="setup-title">Choose your layout</h2>
+        <p id="setup-sub" class="sub"></p>
+      </div>
+    </header>
+
+    <div class="setup-grid">
+      <div class="setup-main">
+        <h3>Board theme</h3>
+        <div id="theme-list" class="theme-list" role="radiogroup" aria-label="Board theme"></div>
+
+        <h3>Display</h3>
+        <label class="switch">
+          <input type="checkbox" id="opt-coords">
+          <span class="slider"></span>
+          <span class="switch-label">Show coordinates</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="opt-hints">
+          <span class="slider"></span>
+          <span class="switch-label">Highlight legal moves</span>
+        </label>
+
+        <div id="ai-options">
+          <h3>Play as</h3>
+          <div class="segmented" id="seg-color" role="group" aria-label="Your colour">
+            <button data-value="white">White</button>
+            <button data-value="black">Black</button>
+            <button data-value="random">Random</button>
+          </div>
+
+        </div>
+
+        <div id="level-options">
+          <h3 id="level-title">Difficulty</h3>
+          <div class="segmented" id="seg-level" role="group" aria-label="Difficulty">
+            <button data-value="easy">Beginner</button>
+            <button data-value="medium">Intermediate</button>
+            <button data-value="hard">Advanced</button>
+          </div>
+          <p class="hint" id="level-hint"></p>
+        </div>
+
+        <div id="local-options">
+          <label class="switch">
+            <input type="checkbox" id="opt-rotate">
+            <span class="slider"></span>
+            <span class="switch-label">Turn the board after every move</span>
+          </label>
+        </div>
+
+        <button class="primary" id="btn-start">Start game</button>
+      </div>
+
+      <aside class="setup-preview" aria-label="Preview">
+        <div id="preview-board" class="board preview" aria-hidden="true"></div>
+        <p id="preview-caption" class="caption"></p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ Screen 3: the game ============ -->
+  <section id="screen-game" class="screen" aria-label="Game">
+    <div class="game">
+      <div class="board-col">
+        <div class="player-bar" id="bar-top">
+          <span class="avatar" id="avatar-top" aria-hidden="true"></span>
+          <span class="pname" id="name-top"></span>
+          <span class="captured" id="cap-top"></span>
+          <span class="adv" id="adv-top"></span>
+        </div>
+
+        <div class="board-row">
+          <div class="evalbar idle" id="evalbar" title="Evaluation of the position. Press Hint to analyse.">
+            <div class="eval-white" id="eval-white"></div>
+          </div>
+          <div class="board-stack">
+            <div id="board" class="board" role="grid" aria-label="Chess board"></div>
+            <svg id="arrows" class="arrows" viewBox="0 0 8 8" aria-hidden="true"></svg>
+          </div>
+        </div>
+
+        <div class="player-bar" id="bar-bottom">
+          <span class="avatar" id="avatar-bottom" aria-hidden="true"></span>
+          <span class="pname" id="name-bottom"></span>
+          <span class="captured" id="cap-bottom"></span>
+          <span class="adv" id="adv-bottom"></span>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="status-card" role="status" aria-live="polite">
+          <span id="turn-dot" class="dot w"></span>
+          <div>
+            <div id="status-main" class="status-main"></div>
+            <div id="status-sub" class="status-sub"></div>
+          </div>
+        </div>
+
+        <div class="analysis-card" id="analysis-card">
+          <h3>Engine analysis <span id="analysis-depth"></span></h3>
+          <div id="analysis-empty" class="analysis-empty">Press <b>Hint</b> (or H) to see the engine&rsquo;s best moves, an arrow and the evaluation for the side to move.</div>
+          <div id="analysis-body" hidden>
+            <div class="analysis-eval"><span id="analysis-score"></span><span id="analysis-text"></span></div>
+            <ol id="analysis-lines" class="analysis-lines"></ol>
+          </div>
+        </div>
+
+        <div class="moves-card">
+          <h3>Moves</h3>
+          <ol id="move-list" class="move-list"></ol>
+        </div>
+
+        <div class="controls">
+          <button class="btn hint-btn" id="btn-hint" title="Ask the engine for a good move (H)">Hint</button>
+          <button class="btn" id="btn-undo">&#8630; Undo</button>
+          <button class="btn" id="btn-flip">&#8645; Flip board</button>
+          <button class="btn" id="btn-new">&#8635; New game</button>
+          <button class="btn" id="btn-menu">&#8962; Menu</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+</div>
+
+<!-- Pop-up used for pawn promotion and for the end of the game -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-card" id="modal-card" role="dialog" aria-modal="true"></div>
+</div>
+
+<script src="chess.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
