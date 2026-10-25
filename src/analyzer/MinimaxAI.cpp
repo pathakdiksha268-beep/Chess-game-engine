@@ -1,15 +1,14 @@
 #include "MinimaxAI.h"
-using namespace std;
+#include <algorithm>
+
 namespace {
 const int INF = 1000000;
 const int MATE = 100000;
 }
 
 int MinimaxAI::minimax(Board& board, int depth, int alpha, int beta, Color toMove) {
-    vector<Move> moves = board.getLegalMoves(toMove);
+    std::vector<Move> moves = board.getLegalMoves(toMove);
 
-    // No legal moves: checkmate (very bad for the player to move) or stalemate (draw).
-    // Adding depth prefers a quicker mate.
     if (moves.empty()) {
         if (board.isInCheck(toMove)) {
             return (toMove == Color::White) ? -(MATE + depth) : (MATE + depth);
@@ -20,35 +19,35 @@ int MinimaxAI::minimax(Board& board, int depth, int alpha, int beta, Color toMov
 
     Color next = (toMove == Color::White) ? Color::Black : Color::White;
 
-    if(toMove == Color::White){                 // White maximizes
+    if (toMove == Color::White) {
         int best = -INF;
-        for (const Move& m : moves){
+        for (const Move& m : moves) {
             board.makeMove(m);
             int score = minimax(board, depth - 1, alpha, beta, next);
             board.undoMove();
 
             if (score > best) best = score;
             if (best > alpha) alpha = best;
-            if (beta <= alpha) break;      // prune
+            if (beta <= alpha) break;
         }
         return best;
-    } 
-    else{                                      // Black minimizes
+    } else {
         int best = INF;
         for (const Move& m : moves) {
             board.makeMove(m);
             int score = minimax(board, depth - 1, alpha, beta, next);
             board.undoMove();
+
             if (score < best) best = score;
             if (best < beta) beta = best;
-            if (beta <= alpha) break;      // prune
+            if (beta <= alpha) break;
         }
         return best;
     }
 }
 
 Move MinimaxAI::findBestMove(Board& board, Color color) {
-    vector<Move> moves = board.getLegalMoves(color);
+    std::vector<Move> moves = board.getLegalMoves(color);
     Color other = (color == Color::White) ? Color::Black : Color::White;
     int searchDepth = (depth_ < 1) ? 1 : depth_;
 
@@ -67,4 +66,23 @@ Move MinimaxAI::findBestMove(Board& board, Color color) {
         }
     }
     return bestMove;
+}
+
+std::vector<ScoredMove> MinimaxAI::rankMoves(Board& board, Color color) {
+    std::vector<ScoredMove> ranked;
+    Color other = (color == Color::White) ? Color::Black : Color::White;
+    int searchDepth = (depth_ < 1) ? 1 : depth_;
+
+    for (const Move& m : board.getLegalMoves(color)) {
+        board.makeMove(m);
+        int score = minimax(board, searchDepth - 1, -INF, INF, other);   // full window: an exact score
+        board.undoMove();
+        ranked.push_back({m, score});
+    }
+
+    // best first; stable, so equal scores keep the order findBestMove uses
+    std::stable_sort(ranked.begin(), ranked.end(), [color](const ScoredMove& a, const ScoredMove& b) {
+        return color == Color::White ? a.score > b.score : a.score < b.score;
+    });
+    return ranked;
 }
